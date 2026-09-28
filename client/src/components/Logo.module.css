@@ -1,0 +1,47 @@
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), #b06bff);
+  box-shadow: 0 6px 20px -6px var(--accent);
+}
+
+.mark svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.text b {
+  font-weight: 800;
+}
+
+.lg {
+  gap: 16px;
+  font-size: 22px;
+}
+
+.lg .mark {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+}
+
+.lg .mark svg {
+  width: 28px;
+  height: 28px;
+}

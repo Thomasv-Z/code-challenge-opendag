@@ -1,0 +1,305 @@
+/* ---------- PIN gate ---------- */
+.gate {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.gateCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: min(380px, 100%);
+  padding: 36px 28px 24px;
+  border-radius: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.gateCard h1 {
+  margin: 8px 0 0;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+}
+
+.gateCard input {
+  width: 100%;
+  height: 56px;
+  text-align: center;
+  font-size: 24px;
+  letter-spacing: 0.4em;
+  border-radius: 14px;
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface-2);
+  outline: none;
+}
+
+.gateCard input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 5px var(--accent-soft);
+}
+
+.gateCard :global(.btn) {
+  width: 100%;
+}
+
+.error {
+  min-height: 18px;
+  font-size: 14px;
+  color: var(--danger);
+}
+
+.backLink {
+  font-size: 14px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+/* ---------- editor ---------- */
+.screen {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: clamp(14px, 2.5vh, 28px);
+  padding: clamp(16px, 3vh, 32px) clamp(20px, 3vw, 44px);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.titleRow h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.divider {
+  width: 1px;
+  height: 28px;
+  background: var(--border-strong);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.actions :global(.btn) {
+  height: 42px;
+  text-decoration: none;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: auto auto;
+  align-content: start;
+  gap: clamp(12px, 2vh, 20px);
+  min-height: 0;
+}
+
+.card {
+  --c: var(--accent);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.8vh, 16px);
+  padding: clamp(16px, 2.5vh, 24px);
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.card h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.card h2::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c);
+}
+
+.card :global(.btn) {
+  height: 42px;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.easy { --c: var(--easy); }
+.medium { --c: var(--medium); }
+.hard { --c: var(--hard); }
+
+.field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.field label {
+  font-size: 14.5px;
+  font-weight: 500;
+}
+
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 11px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.segmented button {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.segmented button.on {
+  background: var(--surface-3);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 11px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.stepper button {
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  color: var(--muted);
+}
+
+.stepper button:hover:not(:disabled) {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+.stepper button:disabled {
+  opacity: 0.3;
+}
+
+.stepper input {
+  width: 54px;
+  height: 36px;
+  text-align: center;
+  font-weight: 700;
+  border: 0;
+  background: transparent;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.stepper input::-webkit-inner-spin-button,
+.stepper input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+.checks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.check span {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1.5px solid var(--border-strong);
+}
+
+.check.on {
+  color: var(--text);
+}
+
+.check.on span {
+  color: #fff;
+  background: var(--c);
+  border-color: var(--c);
+}
+
+.check:disabled {
+  opacity: 0.7;
+}
+
+.resetRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: auto;
+}
+
+.resetRow :global(.btn) {
+  padding: 0 8px;
+  font-size: 13px;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  translate: -50% 0;
+  padding: 12px 22px;
+  border-radius: 14px;
+  font-weight: 600;
+  background: var(--surface-3);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow);
+}
+
+@media (max-width: 1000px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    overflow-y: auto; /* the admin page may scroll on small screens */
+  }
+}
