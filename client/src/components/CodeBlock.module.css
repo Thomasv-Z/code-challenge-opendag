@@ -1,0 +1,103 @@
+.block {
+  --size: clamp(13px, min(1.35vw, calc(var(--code-budget, 52vh) / (var(--lines) * 1.75))), 22px);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.chrome {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.chrome span {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--surface-3);
+}
+
+.chrome span:nth-child(1) { background: #ff5f57; }
+.chrome span:nth-child(2) { background: #febc2e; }
+.chrome span:nth-child(3) { background: #28c840; }
+
+.chrome em {
+  margin-left: 10px;
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--faint);
+}
+
+.pre {
+  flex: 1;
+  margin: 0;
+  padding: 18px 0;
+  font-family: var(--mono);
+  font-size: var(--size);
+  line-height: 1.75;
+  overflow: auto hidden; /* only kicks in for very long lines on phones */
+  scrollbar-width: thin;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.line {
+  display: flex;
+  padding: 0 20px 0 0;
+  white-space: pre;
+  border-left: 3px solid transparent;
+}
+
+.line.bug {
+  background: var(--danger-soft);
+  border-left-color: var(--danger);
+}
+
+.num {
+  flex: 0 0 3.2em;
+  text-align: right;
+  padding-right: 1.4em;
+  color: var(--faint);
+  opacity: 0.7;
+}
+
+.keyword { color: var(--tok-keyword); }
+.builtin { color: var(--tok-builtin); }
+.string { color: var(--tok-string); }
+.number { color: var(--tok-number); }
+.comment { color: var(--tok-comment); font-style: italic; }
+.op { color: var(--tok-op); }
+.text { color: var(--text); }
+
+.blank {
+  display: inline-block;
+  min-width: 3ch;
+  margin: 0 2px;
+  padding: 0 0.4em;
+  border-radius: 6px;
+  color: transparent;
+  background: var(--accent-soft);
+  border: 1.5px dashed var(--accent);
+  line-height: 1.35;
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% { box-shadow: 0 0 0 4px var(--accent-soft); }
+}
+
+@media (max-width: 900px) {
+  .block {
+    --size: clamp(12px, min(2.3vw, calc(var(--code-budget-sm, 38vh) / (var(--lines) * 1.75))), 20px);
+  }
+}

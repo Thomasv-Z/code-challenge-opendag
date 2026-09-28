@@ -1,0 +1,178 @@
+.screen {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: clamp(16px, 3vh, 32px) clamp(20px, 4vw, 56px);
+}
+
+.main {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  min-height: 0;
+}
+
+.card {
+  --c: var(--accent);
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(640px, 100%);
+  padding: clamp(24px, 4.5vh, 48px) clamp(20px, 3vw, 48px);
+  border-radius: 28px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(500px 220px at 50% 0%, color-mix(in srgb, var(--c) 18%, transparent), transparent);
+  pointer-events: none;
+}
+
+.easy { --c: var(--easy); }
+.medium { --c: var(--medium); }
+.hard { --c: var(--hard); }
+
+.done {
+  position: relative;
+  padding: 6px 14px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--c);
+  background: color-mix(in srgb, var(--c) 14%, transparent);
+}
+
+.name {
+  position: relative;
+  margin: 14px 0 0;
+  font-size: clamp(24px, 3vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timeLabel {
+  margin-top: clamp(14px, 3vh, 28px);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+.time {
+  font-size: clamp(56px, 9vw, 112px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+
+.rank {
+  margin-top: 10px;
+  padding: 10px 20px;
+  border-radius: 14px;
+  font-size: 20px;
+  font-weight: 800;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.podium {
+  color: #1a1400;
+  background: linear-gradient(135deg, var(--gold), #ffb347);
+  border-color: transparent;
+  box-shadow: 0 10px 30px -10px var(--gold);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+  margin-top: clamp(18px, 3.5vh, 32px);
+}
+
+.stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 8px;
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+
+.stats span {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.stats b {
+  font-size: 20px;
+}
+
+.pen {
+  color: var(--danger);
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: clamp(18px, 3.5vh, 32px);
+}
+
+.idle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--faint);
+}
+
+.idleBar {
+  width: 200px;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.idleBar i {
+  display: block;
+  height: 100%;
+  background: var(--muted);
+  transition: width 1s linear;
+}
+
+.confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.confetti i {
+  position: absolute;
+  top: 0;
+  border-radius: 2px;
+}
