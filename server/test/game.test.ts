@@ -60,18 +60,19 @@ describe('game', () => {
     expect(() => game.hint(run.runId, 0)).toThrow('no_more_hints');
   });
 
-  it('keeps only the best time per name on the leaderboard', () => {
+  it('lists every run separately, even when names repeat', () => {
     const play = (name: string, ms: number) => {
       const run = game.startRun(name, 'easy');
       const answers = answersFor(run.runId);
       clock += ms;
-      answers.forEach((a, i) => game.answer(run.runId, i, a));
+      return answers.map((a, i) => game.answer(run.runId, i, a)).at(-1)!.result!;
     };
     play('Dana', 20_000);
-    play('dana', 8_000);
-    play('Eve', 12_000);
+    play('Dana', 8_000);
+    const eve = play('Eve', 12_000);
     const board = game.leaderboard('easy');
-    expect(board.map((e) => [e.name.toLowerCase(), e.totalMs])).toEqual([['dana', 8_000], ['eve', 12_000]]);
+    expect(board.map((e) => [e.name, e.totalMs])).toEqual([['Dana', 8_000], ['Eve', 12_000], ['Dana', 20_000]]);
+    expect(eve.rank).toBe(2);
   });
 
   it('survives a cache miss by regenerating questions from the seed', () => {

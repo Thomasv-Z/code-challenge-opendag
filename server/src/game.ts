@@ -71,16 +71,14 @@ export function createGame(db: DB, settings: SettingsStore, now: () => number = 
     get: db.prepare<[string], RunRow>('SELECT * FROM runs WHERE id = ?'),
     progress: db.prepare('UPDATE runs SET current = ?, wrong = ?, hints_used = ? WHERE id = ?'),
     finish: db.prepare('UPDATE runs SET current = ?, finished_at = ?, hints = ?, total_ms = ? WHERE id = ?'),
+    // Names aren't unique: every finished run is its own leaderboard entry.
     board: db.prepare<[Difficulty, number], { id: string; name: string; total_ms: number; hints: number; wrong: number; finished_at: number }>(`
-      SELECT id, name, MIN(total_ms) AS total_ms, hints, wrong, finished_at
+      SELECT id, name, total_ms, hints, wrong, finished_at
       FROM runs WHERE difficulty = ? AND finished_at IS NOT NULL
-      GROUP BY lower(name) ORDER BY total_ms ASC, finished_at ASC LIMIT ?`),
-    rank: db.prepare<[Difficulty, string, number], { n: number }>(`
-      SELECT COUNT(*) AS n FROM (
-        SELECT MIN(total_ms) AS best FROM runs
-        WHERE difficulty = ? AND finished_at IS NOT NULL AND lower(name) != lower(?)
-        GROUP BY lower(name)
-      ) WHERE best < ?`),
+      ORDER BY total_ms ASC, finished_at ASC LIMIT ?`),
+    rank: db.prepare<[Difficulty, number], { n: number }>(`
+      SELECT COUNT(*) AS n FROM runs
+      WHERE difficulty = ? AND finished_at IS NOT NULL AND total_ms < ?`),
     reset: db.prepare('DELETE FROM runs WHERE difficulty = ?'),
     resetAll: db.prepare('DELETE FROM runs'),
     all: db.prepare<[], { name: string; difficulty: string; total_ms: number; hints: number; wrong: number; started_at: number; finished_at: number }>(
@@ -171,7 +169,7 @@ export function createGame(db: DB, settings: SettingsStore, now: () => number = 
       const totalMs = rawMs + penaltyMs;
       q.finish.run(next, finishedAt, hints, totalMs, runId);
       cache.delete(runId);
-      const rank = q.rank.get(row.difficulty, row.name, totalMs)!.n + 1;
+      const rank = q.rank.get(row.difficulty, totalMs)!.n + 1;
       return {
         correct: true,
         penaltyMs: 0,
