@@ -1,10 +1,16 @@
 import { createRng } from './rng';
-import type { Difficulty, PublicQuestion, Question, QuestionType, Template } from './types';
+import type { Difficulty, PublicQuestion, Question, QuestionMode, QuestionType, Template } from './types';
 import { easyTemplates } from './templates/easy';
 import { mediumTemplates } from './templates/medium';
 import { hardTemplates } from './templates/hard';
+import { composedTemplates } from './templates/composed';
 
-export const TEMPLATES: Template[] = [...easyTemplates, ...mediumTemplates, ...hardTemplates];
+export const CLASSIC_TEMPLATES: Template[] = [...easyTemplates, ...mediumTemplates, ...hardTemplates];
+export const COMPOSED_TEMPLATES: Template[] = composedTemplates;
+export const TEMPLATES: Template[] = [...CLASSIC_TEMPLATES, ...COMPOSED_TEMPLATES];
+
+/** Share of composed questions in 'mix' mode. */
+export const MIX_COMPOSED_SHARE = 2 / 3;
 
 export function buildQuestion(template: Template, seed: string, index = 0): Question {
   const q = template.generate(createRng(`${seed}:${index}`));
@@ -26,16 +32,26 @@ export function generateRun(
   difficulty: Difficulty,
   count: number,
   types?: QuestionType[],
+  mode: QuestionMode = 'classic',
 ): Question[] {
   const rng = createRng(seed);
-  const all = TEMPLATES.filter((t) => t.difficulty === difficulty);
-  const enabled = types?.length ? all.filter((t) => types.includes(t.type)) : all;
-  const pool = enabled.length ? enabled : all;
+  const poolOf = (list: Template[]) => {
+    const all = list.filter((t) => t.difficulty === difficulty);
+    const enabled = types?.length ? all.filter((t) => types.includes(t.type)) : all;
+    return enabled.length ? enabled : all;
+  };
 
-  // Draw templates without repeats; reshuffle only when every template has been used.
-  const order: Template[] = [];
-  while (order.length < count) order.push(...rng.shuffle(pool));
-  return order.slice(0, count).map((t, i) => buildQuestion(t, seed, i));
+  // Draw classic templates without repeats; reshuffle only when every template has been used.
+  const classic: Template[] = [];
+  while (classic.length < count) classic.push(...rng.shuffle(poolOf(CLASSIC_TEMPLATES)));
+  if (mode === 'classic') return classic.slice(0, count).map((t, i) => buildQuestion(t, seed, i));
+
+  const composed = poolOf(COMPOSED_TEMPLATES);
+  let next = 0;
+  return Array.from({ length: count }, (_, i) => {
+    const useComposed = mode === 'composed' || rng.next() < MIX_COMPOSED_SHARE;
+    return buildQuestion(useComposed ? rng.pick(composed) : classic[next++], seed, i);
+  });
 }
 
 export function toPublic(q: Question): PublicQuestion {

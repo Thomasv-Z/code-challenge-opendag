@@ -12,7 +12,7 @@ let clock = 0;
 const answersFor = (runId: string) => {
   const row = db.prepare('SELECT seed, difficulty, config FROM runs WHERE id = ?').get(runId) as any;
   const cfg = JSON.parse(row.config);
-  return generateRun(row.seed, row.difficulty, cfg.count, cfg.types).map((q) => q.answer);
+  return generateRun(row.seed, row.difficulty, cfg.count, cfg.types, cfg.mode ?? 'classic').map((q) => q.answer);
 };
 
 beforeEach(() => {
@@ -79,6 +79,26 @@ describe('game', () => {
     const settings = createSettingsStore(db);
     const run = game.startRun('Fay', 'easy');
     const fresh = createGame(db, settings, () => clock); // e.g. after a server restart
+    expect(fresh.answer(run.runId, 0, answersFor(run.runId)[0]).correct).toBe(true);
+  });
+
+  it('stores the question mode with the run', () => {
+    const settings = createSettingsStore(db);
+    settings.update({ questionMode: { easy: 'composed', medium: 'mix', hard: 'classic' } });
+    const run = createGame(db, settings, () => clock).startRun('Gus', 'easy');
+    const cfg = JSON.parse((db.prepare('SELECT config FROM runs WHERE id = ?').get(run.runId) as any).config);
+    expect(cfg.mode).toBe('composed');
+    // Regenerated after a restart, the player still gets the composed questions they saw.
+    const fresh = createGame(db, settings, () => clock);
+    expect(fresh.answer(run.runId, 0, answersFor(run.runId)[0]).correct).toBe(true);
+  });
+
+  it('treats runs stored before question modes existed as classic', () => {
+    const run = game.startRun('Hal', 'medium');
+    const row = db.prepare('SELECT config FROM runs WHERE id = ?').get(run.runId) as any;
+    const { mode: _drop, ...legacy } = JSON.parse(row.config);
+    db.prepare('UPDATE runs SET config = ? WHERE id = ?').run(JSON.stringify(legacy), run.runId);
+    const fresh = createGame(db, createSettingsStore(db), () => clock);
     expect(fresh.answer(run.runId, 0, answersFor(run.runId)[0]).correct).toBe(true);
   });
 });

@@ -3,7 +3,10 @@
 A timed Python puzzle game for the open day. Visitors pick a level, solve randomly generated questions as fast as possible, and their time appears on a live leaderboard screen.
 
 - **3 levels**: Easy, Medium and Hard, with three question types: *predict the output*, *fill the blank* and *fix the bug*
-- **Unique questions for every player**: 28 templates randomize names, numbers, operators, data and structure
+- **Unique questions for every player**:
+  - **Composed questions** are built from 2–6 random code sections (loops, lists, strings, functions…), so both the structure and the values differ every time.
+  - **40 classic templates** randomize the values inside hand-written question shapes.
+  - A per-level setting chooses Classic, Mix (about ⅔ composed; the default) or Composed only.
 - **Hint bot "Byte"** in the bottom-right corner. Each hint adds a time penalty
 - **Leaderboard display** (`/leaderboard`) rotates between the three levels, updates live, and shows a QR code so visitors can join
 - **Settings** (`/settings`, PIN protected): language, theme, penalties, questions per level, question types, leaderboard reset and CSV export
@@ -93,7 +96,7 @@ The test suite runs every question template through real Python (when `python` i
 ## How it works
 
 ```
-shared/   question engine: seeded RNG, 28 templates, answer checking (used by server)
+shared/   question engine: seeded RNG, classic templates, composed-question sections, answer checking
 server/   Express + SQLite + WebSocket: runs, scoring, leaderboard, settings
 client/   React + Vite: game, hint bot, leaderboard display, settings
 ```
@@ -102,6 +105,25 @@ client/   React + Vite: game, hint bot, leaderboard display, settings
 - Times are measured with **server timestamps** plus penalties, so the client timer is display-only.
 - Names don't have to be unique: every finished run gets its own leaderboard entry.
 
-### Adding a question template
+### Composed questions
+
+`shared/src/compose/sections.ts` is a catalog of about 20 sections. Each one:
+- renders a few lines of Python from its parameters;
+- simulates those same parameters in JS;
+- lists *tweakable* parameters (an operator, a number, a method name…).
+
+`compose.ts` chains random sections into a program (2–3 for Easy, 3–4 for Medium, 4–6 for Hard). It keeps a program only if:
+- it's at most 12 lines;
+- the output is at most 40 characters;
+- every section matters (skipping it changes the output), so there's no dead code.
+
+Each program becomes one of three question types:
+- **Predict the output**: distractors come from skipping a step or changing a tweakable.
+- **Fill the blank**: a tweakable is replaced by `___`.
+- **Fix the bug**: a tweakable is set to a wrong value. Only one of the choices restores the output.
+
+To add a section, add it to `SECTIONS`. `npm test` checks that every section is used, and cross-checks hundreds of composed programs against real Python.
+
+### Adding a classic question template
 
 Add a `Template` to `shared/src/templates/{easy,medium,hard}.ts`. `generate(rng)` returns the Python `code`, the `answer`, three `hints` (NL + EN), optional `choices`, and a `verify` program with its exact output. Then run `npm test`: the Python cross-check will catch any answer that doesn't match what Python actually prints.

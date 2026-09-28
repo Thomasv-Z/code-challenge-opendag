@@ -380,6 +380,135 @@ const fixLoop: Template = {
   },
 };
 
+const nestedIf: Template = {
+  id: 'medium-nested-if',
+  difficulty: 'medium',
+  type: 'predict',
+  generate(rng) {
+    const [p, q] = rng.pick([['x', 'y'], ['a', 'b'], ['hp', 'xp'], ['width', 'height']]);
+    const x = rng.int(1, 15), y = rng.int(1, 15);
+    const t1 = x + rng.pick([-2, -1, 1, 2]);
+    const inner = rng.chance(0.5)
+      ? { src: `${q} % 2 == 0`, ok: y % 2 === 0 }
+      : (() => { const t2 = y + rng.pick([-3, 3]); return { src: `${q} < ${t2}`, ok: y < t2 }; })();
+    const labels = rng.pick([['red', 'green', 'blue'], ['north', 'east', 'west'], ['cat', 'dog', 'fox'], ['low', 'mid', 'top']]);
+    const outer = x > t1;
+    const answer = outer ? (inner.ok ? labels[0] : labels[1]) : labels[2];
+    const code = lines(
+      `${p} = ${x}`, `${q} = ${y}`, `if ${p} > ${t1}:`, `    if ${inner.src}:`, `        print("${labels[0]}")`,
+      '    else:', `        print("${labels[1]}")`, 'else:', `    print("${labels[2]}")`,
+    );
+    return {
+      code,
+      prompt: PROMPT_PREDICT,
+      choices: makeChoices(rng, answer, labels, 3),
+      answer,
+      hints: [
+        { nl: 'De binnenste if wordt alleen bekeken als de buitenste voorwaarde waar is.', en: 'The inner if is only checked when the outer condition is true.' },
+        { nl: 'Let op de inspringing: die bepaalt bij welke if een else hoort.', en: 'Watch the indentation: it decides which if an else belongs to.' },
+        { nl: `Is ${x} > ${t1}? ${outer ? 'Ja.' : 'Nee.'}`, en: `Is ${x} > ${t1}? ${outer ? 'Yes.' : 'No.'}` },
+      ],
+      verify: { code, output: answer },
+    };
+  },
+};
+
+const dictUpdate: Template = {
+  id: 'medium-dict',
+  difficulty: 'medium',
+  type: 'predict',
+  generate(rng) {
+    const d = rng.pick(['stock', 'fruit', 'basket', 'inventory']);
+    const [k1, k2, k3] = rng.sample(['apple', 'pear', 'kiwi', 'mango', 'plum', 'lime'], 3);
+    const a = rng.int(1, 9), b = rng.int(2, 9), add = rng.int(1, 5), c = rng.int(1, 9), sub = rng.int(1, 2);
+    const dict: Record<string, number> = { [k1]: a + add, [k2]: b - sub, [k3]: c };
+    const variant = rng.int(0, 2);
+    const [expr, answer] =
+      variant === 0 ? [`${d}["${k1}"] + len(${d})`, dict[k1] + 3]
+        : variant === 1 ? [`sum(${d}.values())`, dict[k1] + dict[k2] + dict[k3]]
+          : [`${d}.get("banana", 0) + ${d}["${k2}"]`, dict[k2]];
+    const code = lines(
+      `${d} = {"${k1}": ${a}, "${k2}": ${b}}`, `${d}["${k1}"] += ${add}`, `${d}["${k2}"] -= ${sub}`, `${d}["${k3}"] = ${c}`, `print(${expr})`,
+    );
+    return {
+      code,
+      prompt: PROMPT_PREDICT,
+      answer: String(answer),
+      hints: [
+        { nl: 'Een dictionary koppelt keys aan waarden; `d["key"] = ...` voegt een nieuwe key toe of overschrijft.', en: 'A dictionary maps keys to values; `d["key"] = ...` adds a new key or overwrites.' },
+        { nl: '`.get(key, 0)` geeft 0 als de key niet bestaat, zonder foutmelding.', en: "`.get(key, 0)` gives 0 if the key doesn't exist, without an error." },
+        { nl: `Aan het eind: ${k1} = ${dict[k1]}, ${k2} = ${dict[k2]}, ${k3} = ${dict[k3]}.`, en: `At the end: ${k1} = ${dict[k1]}, ${k2} = ${dict[k2]}, ${k3} = ${dict[k3]}.` },
+      ],
+      verify: { code, output: String(answer) },
+    };
+  },
+};
+
+const countLetters: Template = {
+  id: 'medium-count-letters',
+  difficulty: 'medium',
+  type: 'predict',
+  generate(rng) {
+    const word = rng.pick(WORDS);
+    const v = rng.pick(['word', 'text', 'name']);
+    const variant = rng.int(0, 2);
+    const set = variant === 0 ? 'aeiou' : rng.sample([...new Set(word)], Math.min(3, new Set(word).size)).join('');
+    const letter = rng.pick([...word]);
+    const cond = variant === 2 ? `ch != "${letter}"` : `ch in "${set}"`;
+    const count = [...word].filter((ch) => (variant === 2 ? ch !== letter : set.includes(ch))).length;
+    const code = lines(`${v} = "${word}"`, 'count = 0', `for ch in ${v}:`, `    if ${cond}:`, '        count += 1', 'print(count)');
+    return {
+      code,
+      prompt: PROMPT_PREDICT,
+      answer: String(count),
+      hints: [
+        { nl: 'De lus bekijkt elke letter van de string één voor één.', en: 'The loop looks at every letter of the string, one by one.' },
+        variant === 2
+          ? { nl: `\`!=\` betekent "is niet": tel alle letters behalve "${letter}".`, en: `\`!=\` means "is not": count every letter except "${letter}".` }
+          : { nl: `\`ch in "${set}"\` is waar als de letter één van ${[...set].join(', ')} is.`, en: `\`ch in "${set}"\` is true if the letter is one of ${[...set].join(', ')}.` },
+        { nl: `"${word}" heeft ${word.length} letters.`, en: `"${word}" has ${word.length} letters.` },
+      ],
+      verify: { code, output: String(count) },
+    };
+  },
+};
+
+const whileBreak: Template = {
+  id: 'medium-while-break',
+  difficulty: 'medium',
+  type: 'predict',
+  generate(rng) {
+    let code: string, answer: string, hint: Loc;
+    if (rng.chance(0.5)) {
+      const t = rng.int(10, 40);
+      let n = 0, total = 0;
+      while (true) { n++; total += n; if (total > t) break; }
+      code = lines('n = 0', 'total = 0', 'while True:', '    n += 1', '    total += n', `    if total > ${t}:`, '        break', 'print(n, total)');
+      answer = `${n} ${total}`;
+      hint = { nl: `total wordt 1, 3, 6, 10, ...; de lus stopt zodra total groter is dan ${t}.`, en: `total becomes 1, 3, 6, 10, ...; the loop stops once total exceeds ${t}.` };
+    } else {
+      const t = rng.int(10, 60);
+      let i = 1;
+      while (i * i <= t) i++;
+      code = lines('for i in range(1, 20):', `    if i * i > ${t}:`, '        break', 'print(i)');
+      answer = String(i);
+      hint = { nl: `Zoek het eerste getal waarvan het kwadraat groter is dan ${t}.`, en: `Find the first number whose square is greater than ${t}.` };
+    }
+    return {
+      code,
+      prompt: PROMPT_PREDICT,
+      answer,
+      hints: [
+        { nl: '`break` stopt de lus meteen; de code na de lus gaat gewoon verder.', en: '`break` stops the loop right away; the code after the loop carries on.' },
+        { nl: 'Na de lus houdt de variabele de waarde die hij had bij de break.', en: 'After the loop, the variable keeps the value it had at the break.' },
+        hint,
+      ],
+      verify: { code, output: answer },
+    };
+  },
+};
+
 export const mediumTemplates: Template[] = [
+  nestedIf, dictUpdate, countLetters, whileBreak,
   loopSum, listSlice, whileLoop, functions, moduloLoop, listMethods, stringMethods, fillRange, fixLoop,
 ];

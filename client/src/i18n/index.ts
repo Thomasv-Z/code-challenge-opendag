@@ -1,8 +1,9 @@
-import type { Difficulty, Lang, Loc, QuestionType } from '@cc/shared';
+import type { Difficulty, Lang, Loc, QuestionMode, QuestionType } from '@cc/shared';
 import { useSettings } from '../store/settings';
 
 const nl = {
   appName: 'Code Challenge',
+  credits: 'Gemaakt door Thomas van Z voor via',
   tagline: 'Hoe snel los jij deze Python-puzzels op?',
   namePlaceholder: 'Jouw naam',
   nameLabel: 'Wie ben jij?',
@@ -81,6 +82,8 @@ const nl = {
     perDifficulty: 'Per niveau',
     questionsPerRun: 'Aantal vragen',
     types: 'Vraagtypes',
+    questionMode: 'Vraagstijl',
+    modes: { classic: 'Klassiek', mix: 'Mix', composed: 'Samengesteld' } as Record<QuestionMode, string>,
     data: 'Data',
     export: 'Exporteer CSV',
     reset: 'Reset',
@@ -98,6 +101,7 @@ type Dict = typeof nl;
 
 const en: Dict = {
   appName: 'Code Challenge',
+  credits: 'Made by Thomas van Z for via',
   tagline: 'How fast can you solve these Python puzzles?',
   namePlaceholder: 'Your name',
   nameLabel: 'Who are you?',
@@ -176,6 +180,8 @@ const en: Dict = {
     perDifficulty: 'Per level',
     questionsPerRun: 'Questions',
     types: 'Question types',
+    questionMode: 'Question style',
+    modes: { classic: 'Classic', mix: 'Mix', composed: 'Composed' },
     data: 'Data',
     export: 'Export CSV',
     reset: 'Reset',

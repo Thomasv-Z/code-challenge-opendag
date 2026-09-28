@@ -62,7 +62,7 @@
 .screen {
   height: 100%;
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto 1fr auto;
   gap: clamp(14px, 2.5vh, 28px);
   padding: clamp(16px, 3vh, 32px) clamp(20px, 3vw, 44px);
 }
@@ -73,6 +73,11 @@
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+}
+
+.footer {
+  display: flex;
+  justify-content: center;
 }
 
 .titleRow {

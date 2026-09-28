@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import {
   DIFFICULTIES, checkAnswer, generateRun, isNameAllowed, toPublic,
   type Difficulty, type LeaderboardEntry, type Loc, type PublicQuestion, type Question,
-  type QuestionType, type RunResult,
+  type QuestionMode, type QuestionType, type RunResult,
 } from '@cc/shared';
 import type { DB } from './db';
 import type { SettingsStore } from './settings';
@@ -16,6 +16,8 @@ export class HttpError extends Error {
 interface RunConfig {
   count: number;
   types: QuestionType[];
+  /** Absent in runs stored before composed questions existed: those were classic. */
+  mode?: QuestionMode;
   hintPenaltyMs: number;
   wrongPenaltyMs: number;
 }
@@ -92,7 +94,7 @@ export function createGame(db: DB, settings: SettingsStore, now: () => number = 
     const config: RunConfig = JSON.parse(row.config);
     let questions = cache.get(runId);
     if (!questions) {
-      questions = generateRun(row.seed, row.difficulty, config.count, config.types);
+      questions = generateRun(row.seed, row.difficulty, config.count, config.types, config.mode ?? 'classic');
       cache.set(runId, questions);
     }
     return { row, config, questions, hintsUsed: JSON.parse(row.hints_used) as number[] };
@@ -115,12 +117,13 @@ export function createGame(db: DB, settings: SettingsStore, now: () => number = 
       const config: RunConfig = {
         count: s.questionsPerRun[d],
         types: s.enabledTypes[d],
+        mode: s.questionMode[d],
         hintPenaltyMs: s.hintPenaltySec * 1000,
         wrongPenaltyMs: s.wrongPenaltySec * 1000,
       };
       const id = randomUUID();
       const seed = randomUUID();
-      const questions = generateRun(seed, d, config.count, config.types);
+      const questions = generateRun(seed, d, config.count, config.types, config.mode);
       cache.set(id, questions);
       q.insert.run({ id, name, difficulty: d, seed, config: JSON.stringify(config), started_at: now() });
       return {

@@ -4,7 +4,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  DIFFICULTIES, TEMPLATES, buildQuestion, checkAnswer, generateRun, normalizeAnswer, toPublic,
+  CLASSIC_TEMPLATES, DIFFICULTIES, TEMPLATES, buildQuestion, checkAnswer, generateRun, normalizeAnswer, toPublic,
   type Question,
 } from '../src';
 
@@ -61,7 +61,7 @@ describe('generateRun', () => {
 
   it('does not repeat templates until the pool is exhausted', () => {
     for (const d of DIFFICULTIES) {
-      const pool = TEMPLATES.filter((t) => t.difficulty === d).length;
+      const pool = CLASSIC_TEMPLATES.filter((t) => t.difficulty === d).length;
       const run = generateRun('r', d, pool);
       expect(new Set(run.map((q) => q.template)).size).toBe(pool);
       expect(generateRun('r', d, pool + 3)).toHaveLength(pool + 3);
@@ -108,7 +108,8 @@ describe.skipIf(!python)('python cross-check', () => {
       return ls.join('\n');
     };
     for (const t of TEMPLATES) {
-      for (const s of seeds(200)) {
+      // Composed questions have far more shapes, so they get more samples.
+      for (const s of seeds(t.id.startsWith('composed-') ? 300 : 200)) {
         const q = buildQuestion(t, s);
         const label = `${t.id} (${s})`;
         cases.push({ label, code: q.verify.code, expected: q.verify.output, mustMatch: true });

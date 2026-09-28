@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import QRCode from 'qrcode';
 import { DIFFICULTIES, type Difficulty } from '@cc/shared';
+import { Credits } from '../components/Credits';
 import { Logo } from '../components/Logo';
 import { useT } from '../i18n';
 import { api, type Boards } from '../lib/api';
@@ -152,6 +153,10 @@ export function LeaderboardPage() {
           </aside>
         )}
       </main>
+
+      <footer className={styles.footer}>
+        <Credits className={styles.credits} />
+      </footer>
     </div>
   );
 }
