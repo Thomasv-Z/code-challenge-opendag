@@ -1,47 +1,49 @@
 .logo {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-weight: 500;
+  gap: 14px;
+  font-weight: 600;
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 
-.mark {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--accent), #b06bff);
-  box-shadow: 0 6px 20px -6px var(--accent);
+.logo img {
+  display: block;
+  height: 34px;
+  width: auto;
 }
 
-.mark svg {
-  width: 22px;
-  height: 22px;
-  fill: none;
-  stroke: #fff;
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.onLight {
+  display: none !important;
 }
 
-.text b {
-  font-weight: 800;
+:global([data-theme='light']) .onDark {
+  display: none !important;
+}
+
+:global([data-theme='light']) .onLight {
+  display: block !important;
+}
+
+.divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border-strong);
+}
+
+.text {
+  color: var(--muted);
 }
 
 .lg {
-  gap: 16px;
+  gap: 18px;
   font-size: 22px;
 }
 
-.lg .mark {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+.lg img {
+  height: 50px;
 }
 
-.lg .mark svg {
-  width: 28px;
-  height: 28px;
+.lg .divider {
+  height: 34px;
 }

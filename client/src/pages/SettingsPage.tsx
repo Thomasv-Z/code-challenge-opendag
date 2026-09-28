@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { DIFFICULTIES, QUESTION_TYPES, type Difficulty, type Settings } from '@cc/shared';
+import { DIFFICULTIES, QUESTION_MODES, QUESTION_TYPES, type Difficulty, type Settings } from '@cc/shared';
+import { Credits } from '../components/Credits';
 import { Logo } from '../components/Logo';
 import { LangToggle } from '../components/LangToggle';
 import { useT } from '../i18n';
@@ -98,7 +99,7 @@ function Editor({ pin }: { pin: string }) {
   };
 
   const patch = (p: Partial<Settings>) => setDraft((d) => ({ ...d, ...p }));
-  const patchDiff = <K extends 'questionsPerRun' | 'enabledTypes'>(key: K, d: Difficulty, v: Settings[K][Difficulty]) =>
+  const patchDiff = <K extends 'questionsPerRun' | 'enabledTypes' | 'questionMode'>(key: K, d: Difficulty, v: Settings[K][Difficulty]) =>
     setDraft((s) => ({ ...s, [key]: { ...s[key], [d]: v } }));
 
   async function save() {
@@ -216,6 +217,13 @@ function Editor({ pin }: { pin: string }) {
             <Field label={t.settings.questionsPerRun}>
               <Stepper value={draft.questionsPerRun[d]} min={1} max={20} step={1} onChange={(v) => patchDiff('questionsPerRun', d, v)} />
             </Field>
+            <Field label={t.settings.questionMode}>
+              <Segmented
+                value={draft.questionMode[d]}
+                options={QUESTION_MODES.map((m) => [m, t.settings.modes[m]])}
+                onChange={(v) => patchDiff('questionMode', d, v)}
+              />
+            </Field>
             <Field label={t.settings.types}>
               <div className={styles.checks}>
                 {QUESTION_TYPES.map((type) => {
@@ -241,6 +249,10 @@ function Editor({ pin }: { pin: string }) {
           </Card>
         ))}
       </main>
+
+      <footer className={styles.footer}>
+        <Credits />
+      </footer>
 
       <AnimatePresence>
         {toast && (

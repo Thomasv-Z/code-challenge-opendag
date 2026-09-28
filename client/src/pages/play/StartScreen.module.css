@@ -254,8 +254,12 @@
 }
 
 .footer {
-  display: flex;
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+}
+
+.gear {
   opacity: 0.5;
 }
 

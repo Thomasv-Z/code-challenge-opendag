@@ -1,0 +1,33 @@
+.credits {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+.credits img {
+  display: block;
+  height: 16px;
+  width: auto;
+  opacity: 0.7;
+}
+
+.onLight {
+  display: none !important;
+}
+
+:global([data-theme='light']) .onDark {
+  display: none !important;
+}
+
+:global([data-theme='light']) .onLight {
+  display: block !important;
+}
+
+.dot {
+  opacity: 0.6;
+}
