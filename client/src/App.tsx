@@ -15,5 +15,6 @@ export function App() {
     if (e.type === 'settings:updated') apply(e.settings);
   });
 
-  return loaded ? <Outlet /> : null;
+  // Shown while the first settings request is in flight (e.g. on a slow connection).
+  return loaded ? <Outlet /> : <div className="connecting">Verbinden met de server…</div>;
 }

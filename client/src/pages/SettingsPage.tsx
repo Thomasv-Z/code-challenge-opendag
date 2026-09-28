@@ -6,6 +6,7 @@ import { Logo } from '../components/Logo';
 import { LangToggle } from '../components/LangToggle';
 import { useT } from '../i18n';
 import { ApiError, api } from '../lib/api';
+import { BASE_PATH } from '../lib/config';
 import { shake } from '../lib/shake';
 import { useSettings } from '../store/settings';
 import styles from './SettingsPage.module.css';
@@ -195,7 +196,7 @@ function Editor({ pin }: { pin: string }) {
           <button className="btn btn-ghost" onClick={exportCsv}>
             ⬇ {t.settings.export}
           </button>
-          <a className="btn btn-ghost" href="/leaderboard" target="_blank" rel="noreferrer">
+          <a className="btn btn-ghost" href={`${BASE_PATH}leaderboard`} target="_blank" rel="noreferrer">
             ↗ {t.settings.openBoard}
           </a>
           <div className={styles.resetRow}>

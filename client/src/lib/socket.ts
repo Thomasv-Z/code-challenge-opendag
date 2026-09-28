@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { ServerEvent } from '@cc/shared';
+import { WS_URL } from './config';
 
 type Listener = (e: ServerEvent) => void;
 const listeners = new Set<Listener>();
@@ -8,8 +9,7 @@ let retry = 0;
 
 /** One shared, self-reconnecting WebSocket for the whole app. */
 function connect() {
-  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-  socket = new WebSocket(`${proto}://${location.host}/ws`);
+  socket = new WebSocket(WS_URL);
   socket.onopen = () => {
     retry = 0;
   };

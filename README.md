@@ -30,6 +30,56 @@ Before the open day, copy `server/.env.example` to `server/.env` and **change `A
 
 Scores are stored in `server/data/challenge.db` (SQLite). Delete that file, or use *Reset* in settings, to start fresh.
 
+## Hosting with Docker
+
+The image serves the whole app (game, leaderboard, settings) from one container. Scores and settings live in a Docker volume, so they survive restarts and rebuilds.
+
+On your server:
+
+```bash
+git clone https://github.com/Thomasv-Z/code-challenge-opendag.git
+cd code-challenge-opendag
+cp .env.example .env      # set ADMIN_PIN (required) and PUBLIC_URL
+docker compose up -d --build
+```
+
+The app is now on port 3000 (change it with `HOST_PORT`). To update later, run `git pull && docker compose up -d --build`.
+
+### HTTPS / reverse proxy
+
+Put it behind your existing reverse proxy. The proxy must pass through **WebSocket upgrades on `/ws`**; that's how the live leaderboard updates arrive.
+
+Caddy (HTTPS automatically):
+
+```
+challenge.example.com {
+    reverse_proxy localhost:3000
+}
+```
+
+nginx:
+
+```nginx
+location / {
+    proxy_pass http://localhost:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+}
+```
+
+Set `PUBLIC_URL` in `.env` to the public address (e.g. `https://challenge.example.com`). Inside Docker the server can't see its own public address, so this is what the leaderboard QR code uses when the display is opened via `localhost`.
+
+### Optional: frontend on GitHub Pages
+
+The container already serves the frontend, so this is only needed if you also want the game at `thomasv-z.github.io`. The server must be reachable over **HTTPS**, since browsers block a Pages site from calling a plain-HTTP API.
+
+1. In `.env`, set `CORS_ORIGIN=https://thomasv-z.github.io` and restart the container.
+2. In the GitHub repo, go to **Settings → Secrets and variables → Actions → Variables** and add `API_URL` with your server's HTTPS address.
+3. Go to **Settings → Pages → Source** and choose **GitHub Actions**.
+4. Push to `main`. The workflow builds and publishes to `https://thomasv-z.github.io/code-challenge-opendag/`.
+
 ## Development
 
 ```bash
