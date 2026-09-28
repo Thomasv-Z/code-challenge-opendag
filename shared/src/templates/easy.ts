@@ -1,7 +1,7 @@
-import type { Template } from '../types';
+import type { Loc, Template } from '../types';
 import {
   PEOPLE, PROMPT_PREDICT, VAR_NAMES, WORDS, floorDiv, lines, makeChoices,
-  numberNeighbors, promptFill, promptFix, pyFloat, pyMod,
+  numberNeighbors, promptFill, promptFix, pyFloat, pyMod, pyRepr,
 } from '../py';
 
 type Op = '+' | '-' | '*';
@@ -377,6 +377,162 @@ const indexing: Template = {
   },
 };
 
+const builtins: Template = {
+  id: 'easy-builtins',
+  difficulty: 'easy',
+  type: 'predict',
+  generate(rng) {
+    const [p, q] = rng.sample(['a', 'b', 'x', 'y', 'low', 'high'], 2);
+    const x = rng.int(-9, -2), y = rng.int(2, 9);
+    const variant = rng.int(0, 2);
+    const [expr, answer, wrong]: [string, number, number[]] =
+      variant === 0 ? [`abs(${p}) + ${q}`, -x + y, [x + y, -x - y, y - x + 1]]
+        : variant === 1 ? [`max(${p}, ${q}) - min(${p}, ${q})`, y - x, [x - y, y + x, y]]
+          : [`min(abs(${p}), ${q})`, Math.min(-x, y), [Math.max(-x, y), x, Math.min(x, y)]];
+    const code = lines(`${p} = ${x}`, `${q} = ${y}`, `print(${expr})`);
+    return {
+      code,
+      prompt: PROMPT_PREDICT,
+      choices: makeChoices(rng, String(answer), [...wrong.map(String), ...numberNeighbors(answer)]),
+      answer: String(answer),
+      hints: [
+        { nl: 'Dit zijn ingebouwde functies van Python.', en: 'These are built-in Python functions.' },
+        { nl: '`abs` maakt een getal positief, `max` en `min` kiezen de grootste of kleinste.', en: '`abs` makes a number positive, `max` and `min` pick the largest or smallest.' },
+        { nl: `abs(${x}) is ${-x}.`, en: `abs(${x}) is ${-x}.` },
+      ],
+      verify: { code, output: String(answer) },
+    };
+  },
+};
+
+const stringMethods: Template = {
+  id: 'easy-string-methods',
+  difficulty: 'easy',
+  type: 'predict',
+  generate(rng) {
+    const word = rng.pick(WORDS);
+    const v = rng.pick(['word', 'text', 'name']);
+    const c = rng.pick([...new Set(word)]);
+    const start = rng.chance(0.5) ? word[0] : rng.pick([...'bcdkmpstz'].filter((l) => l !== word[0]));
+    const variant = rng.int(0, 3);
+    let expr: string, answer: string, wrong: string[], hint: Loc;
+    if (variant === 0) {
+      expr = `${v}.upper()`;
+      answer = word.toUpperCase();
+      wrong = [word, word[0].toUpperCase() + word.slice(1), word.slice(0, -1).toUpperCase() + word.slice(-1)];
+      hint = { nl: '`upper()` maakt alle letters hoofdletters.', en: '`upper()` makes every letter uppercase.' };
+    } else if (variant === 1) {
+      expr = `${v}.replace("${c}", "*")`;
+      answer = word.split(c).join('*');
+      wrong = [word.replace(c, '*'), word, `*${word.slice(1)}`, word.split(c).join(''), `${word.slice(0, -1)}*`];
+      hint = { nl: `\`replace\` vervangt élke "${c}", niet alleen de eerste.`, en: `\`replace\` replaces every "${c}", not just the first.` };
+    } else if (variant === 2) {
+      expr = `len(${v}) * 2`;
+      answer = String(word.length * 2);
+      wrong = [...numberNeighbors(word.length * 2), String(word.length)];
+      hint = { nl: `"${word}" heeft ${word.length} letters.`, en: `"${word}" has ${word.length} letters.` };
+    } else {
+      expr = `${v}.startswith("${start}")`;
+      answer = word.startsWith(start) ? 'True' : 'False';
+      wrong = ['True', 'False', 'None'];
+      hint = { nl: `\`startswith\` kijkt alleen naar het begin: begint "${word}" met "${start}"?`, en: `\`startswith\` only looks at the start: does "${word}" begin with "${start}"?` };
+    }
+    const code = lines(`${v} = "${word}"`, `print(${expr})`);
+    return {
+      code,
+      prompt: PROMPT_PREDICT,
+      choices: makeChoices(rng, answer, wrong),
+      answer,
+      hints: [
+        { nl: 'Een methode zoals `.upper()` werkt op de string vóór de punt.', en: 'A method like `.upper()` works on the string before the dot.' },
+        { nl: 'String-methodes geven een nieuwe waarde terug; de originele string verandert niet.', en: 'String methods return a new value; the original string is unchanged.' },
+        hint,
+      ],
+      verify: { code, output: answer },
+    };
+  },
+};
+
+const listBasics: Template = {
+  id: 'easy-list-basics',
+  difficulty: 'easy',
+  type: 'predict',
+  generate(rng) {
+    const name = rng.pick(['nums', 'scores', 'values', 'ages']);
+    const pool = Array.from({ length: 20 }, (_, i) => i + 1);
+    const nums = rng.sample(pool, 4);
+    const variant = rng.int(0, 2);
+    let expr: string, answer: string, wrong: string[], hint: Loc;
+    if (variant === 0) {
+      expr = `${name}[1] + len(${name})`;
+      answer = String(nums[1] + 4);
+      wrong = [nums[0] + 4, nums[1] + 3, nums[2] + 4].map(String);
+      hint = { nl: `${name}[1] is het tweede getal: ${nums[1]}.`, en: `${name}[1] is the second number: ${nums[1]}.` };
+    } else if (variant === 1) {
+      const x = rng.chance(0.5) ? rng.pick(nums) : rng.pick(pool.filter((n) => !nums.includes(n)));
+      expr = `${x} in ${name}`;
+      answer = nums.includes(x) ? 'True' : 'False';
+      wrong = ['True', 'False', 'None'];
+      hint = { nl: `\`in\` kijkt of ${x} ergens in de lijst staat.`, en: `\`in\` checks whether ${x} appears anywhere in the list.` };
+    } else {
+      expr = `${name}[-1] * 2`;
+      answer = String(nums[3] * 2);
+      wrong = [nums[0] * 2, nums[2] * 2, nums[3] + 2].map(String);
+      hint = { nl: `Index -1 is het laatste element: ${nums[3]}.`, en: `Index -1 is the last element: ${nums[3]}.` };
+    }
+    const code = lines(`${name} = ${pyRepr(nums)}`, `print(${expr})`);
+    return {
+      code,
+      prompt: PROMPT_PREDICT,
+      choices: makeChoices(rng, answer, [...wrong, ...(/^\d+$/.test(answer) ? numberNeighbors(Number(answer)) : [])]),
+      answer,
+      hints: [
+        { nl: 'Een lijst bewaart meerdere waarden op volgorde.', en: 'A list stores several values in order.' },
+        { nl: 'Indexen beginnen bij 0; -1 is het laatste element; `len` telt de elementen.', en: 'Indexes start at 0; -1 is the last element; `len` counts the elements.' },
+        hint,
+      ],
+      verify: { code, output: answer },
+    };
+  },
+};
+
+const fillCompare: Template = {
+  id: 'easy-fill-compare',
+  difficulty: 'easy',
+  type: 'fillblank',
+  generate(rng) {
+    const theme = rng.pick([
+      { v: 'age', yes: 'Too young', no: 'Welcome' },
+      { v: 'score', yes: 'Try again', no: 'You win' },
+      { v: 'speed', yes: 'Slow', no: 'Fast' },
+    ]);
+    const value = rng.int(10, 25);
+    const th = value + rng.pick([-3, 0, 3]);
+    const ops = ['<', '>', '<=', '>=', '==', '!='];
+    const holds = (op: string) =>
+      op === '<' ? value < th : op === '>' ? value > th : op === '<=' ? value <= th : op === '>=' ? value >= th : op === '==' ? value === th : value !== th;
+    // Exactly one choice gives the wanted branch: the rest all go the other way.
+    const wantYes = rng.chance(0.5);
+    const op = rng.pick(ops.filter((o) => holds(o) === wantYes));
+    const wrong = ops.filter((o) => holds(o) !== wantYes);
+    const output = wantYes ? theme.yes : theme.no;
+    const code = lines(`${theme.v} = ${value}`, `if ${theme.v} ___ ${th}:`, `    print("${theme.yes}")`, 'else:', `    print("${theme.no}")`);
+    return {
+      code,
+      prompt: promptFill(output),
+      choices: makeChoices(rng, op, rng.shuffle(wrong)),
+      answer: op,
+      hints: [
+        { nl: `Moet de voorwaarde waar of onwaar zijn om "${output}" te printen?`, en: `Must the condition be true or false to print "${output}"?` },
+        { nl: '`==` is gelijk, `!=` is ongelijk, `<=` is kleiner of gelijk.', en: '`==` is equal, `!=` is not equal, `<=` is less than or equal.' },
+        { nl: `Vergelijk ${value} met ${th}.`, en: `Compare ${value} with ${th}.` },
+      ],
+      verify: { code: code.replace('___', op), output },
+    };
+  },
+};
+
 export const easyTemplates: Template[] = [
   precedence, reassign, strings, ifElif, booleans, division, fillOperator, fixSyntax, indexing,
+  builtins, stringMethods, listBasics, fillCompare,
 ];

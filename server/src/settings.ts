@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS, DIFFICULTIES, QUESTION_TYPES, type Settings } from '@cc/shared';
+import { DEFAULT_SETTINGS, DIFFICULTIES, QUESTION_MODES, QUESTION_TYPES, type Settings } from '@cc/shared';
 import type { DB } from './db';
 
 const clamp = (v: unknown, min: number, max: number, fallback: number) => {
@@ -27,6 +27,9 @@ export function sanitizeSettings(input: any, base: Settings = DEFAULT_SETTINGS):
       const valid = QUESTION_TYPES.filter((t) => list.includes(t));
       return valid.length ? valid : [...QUESTION_TYPES];
     }),
+    questionMode: perDifficulty((d) =>
+      QUESTION_MODES.includes(s.questionMode?.[d]) ? s.questionMode[d] : base.questionMode[d],
+    ),
   };
 }
 

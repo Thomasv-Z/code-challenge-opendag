@@ -423,6 +423,153 @@ const enumerateZip: Template = {
   },
 };
 
+const sets: Template = {
+  id: 'hard-sets',
+  difficulty: 'hard',
+  type: 'predict',
+  generate(rng) {
+    const [p, q] = rng.pick([['a', 'b'], ['mine', 'yours'], ['team_a', 'team_b'], ['left', 'right']]);
+    const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    const a = rng.sample(digits, rng.int(4, 5)).sort((x, y) => x - y);
+    const b = rng.sample(digits, rng.int(3, 4)).sort((x, y) => x - y);
+    const union = new Set([...a, ...b]).size;
+    const both = a.filter((x) => b.includes(x));
+    const onlyA = a.filter((x) => !b.includes(x));
+    const lensVariant = rng.chance(0.5);
+    const expr = lensVariant ? `len(${p} | ${q}), len(${p} & ${q}), len(${p} - ${q})` : `sorted(${p} - ${q})`;
+    const answer = lensVariant ? `${union} ${both.length} ${onlyA.length}` : pyRepr(onlyA);
+    const setSrc = (xs: number[]) => `{${xs.join(', ')}}`;
+    const code = lines(`${p} = ${setSrc(a)}`, `${q} = ${setSrc(b)}`, `print(${expr})`);
+    return {
+      code,
+      prompt: PROMPT_PREDICT,
+      answer,
+      hints: [
+        { nl: 'Een set bevat elke waarde maar één keer.', en: 'A set contains each value only once.' },
+        { nl: '`|` is alles uit beide sets, `&` wat in allebei zit, `-` wat alleen in de eerste zit.', en: '`|` is everything from both, `&` what is in both, `-` what is only in the first.' },
+        { nl: `In allebei: ${both.join(', ') || 'niets'}.`, en: `In both: ${both.join(', ') || 'nothing'}.` },
+      ],
+      verify: { code, output: answer },
+    };
+  },
+};
+
+const sortedKey: Template = {
+  id: 'hard-sorted-key',
+  difficulty: 'hard',
+  type: 'predict',
+  generate(rng) {
+    const name = rng.pick(['words', 'fruits', 'names']);
+    const words = rng.sample(['kiwi', 'fig', 'banana', 'plum', 'cherry', 'apple', 'lime', 'mango', 'pear', 'grape'], 4);
+    const firstBy = (better: (a: string, b: string) => boolean) => words.reduce((best, w) => (better(w, best) ? w : best));
+    const shortest = firstBy((a, b) => a.length < b.length);
+    const longest = firstBy((a, b) => a.length > b.length);
+    const alpha = [...words].sort();
+    const variant = rng.int(0, 2);
+    const [expr, answer, hint]: [string, string, Loc] =
+      variant === 0
+        ? [`sorted(${name}, key=len)[0], max(${name}, key=len)`, `${shortest} ${longest}`,
+          { nl: 'Bij gelijke lengte blijft de oorspronkelijke volgorde behouden; `max` geeft de eerste langste.', en: 'Equal lengths keep their original order; `max` returns the first longest.' }]
+        : variant === 1
+          ? [`sorted(${name})[-1], min(${name})`, `${alpha[alpha.length - 1]} ${alpha[0]}`,
+            { nl: 'Zonder key sorteert Python strings alfabetisch.', en: 'Without a key, Python sorts strings alphabetically.' }]
+          : [`sorted(${name}, key=len, reverse=True)[0]`, longest,
+            { nl: 'reverse=True zet de langste vooraan; bij gelijke lengte blijft de volgorde van de lijst.', en: 'reverse=True puts the longest first; equal lengths keep the list order.' }];
+    const code = lines(`${name} = ${pyRepr(words)}`, `print(${expr})`);
+    return {
+      code,
+      prompt: PROMPT_PREDICT,
+      answer,
+      hints: [
+        { nl: '`key=len` betekent: vergelijk op lengte in plaats van alfabetisch.', en: '`key=len` means: compare by length instead of alphabetically.' },
+        { nl: `Lengtes: ${words.map((w) => `${w}=${w.length}`).join(', ')}.`, en: `Lengths: ${words.map((w) => `${w}=${w.length}`).join(', ')}.` },
+        hint,
+      ],
+      verify: { code, output: answer },
+    };
+  },
+};
+
+const enumerateBuild: Template = {
+  id: 'hard-enumerate-build',
+  difficulty: 'hard',
+  type: 'predict',
+  generate(rng) {
+    const word = rng.pick(WORDS.filter((w) => w.length >= 4 && w.length <= 7));
+    const v = rng.pick(['word', 'text', 'code']);
+    const r = rng.int(0, 1), k = rng.int(2, 4);
+    const cond = rng.chance(0.5) ? { src: `i % 2 == ${r}`, f: (i: number) => i % 2 === r } : { src: `i < ${k}`, f: (i: number) => i < k };
+    const then = rng.pick([{ src: 'ch.upper()', f: (c: string) => c.toUpperCase() }, { src: 'ch * 2', f: (c: string) => c + c }]);
+    const other = rng.pick([{ src: 'ch', f: (c: string) => c }, { src: '"-"', f: () => '-' }]);
+    const result = [...word].map((c, i) => (cond.f(i) ? then.f(c) : other.f(c))).join('');
+    const code = lines(
+      `${v} = "${word}"`, 'result = ""', `for i, ch in enumerate(${v}):`, `    if ${cond.src}:`, `        result += ${then.src}`, '    else:',
+      `        result += ${other.src}`, 'print(result)',
+    );
+    return {
+      code,
+      prompt: PROMPT_PREDICT,
+      answer: result,
+      hints: [
+        { nl: '`enumerate` geeft bij elke letter ook de index i, beginnend bij 0.', en: '`enumerate` gives the index i with every letter, starting at 0.' },
+        { nl: `De eerste ronde: i = 0, ch = "${word[0]}".`, en: `The first round: i = 0, ch = "${word[0]}".` },
+        { nl: `Het resultaat begint met "${result.slice(0, 3)}".`, en: `The result starts with "${result.slice(0, 3)}".` },
+      ],
+      verify: { code, output: result },
+    };
+  },
+};
+
+const fixLoops: Template = {
+  id: 'hard-fix-loops',
+  difficulty: 'hard',
+  type: 'fixbug',
+  generate(rng) {
+    let codeLines: string[], bugLine: number, fix: string, wrong: string[], output: string, hint: Loc;
+    if (rng.chance(0.5)) {
+      const palins = rng.sample(['level', 'radar', 'kayak', 'noon', 'refer', 'civic', 'rotor'], rng.int(1, 2));
+      const sameEnds = rng.sample(['that', 'dread', 'gong', 'test', 'area', 'noun'], 1);
+      const others = rng.sample(['python', 'code', 'robot', 'pixel', 'cloud', 'laptop'], 3 - palins.length);
+      const words = rng.shuffle([...palins, ...sameEnds, ...others]);
+      codeLines = [`words = ${pyRepr(words)}`, 'count = 0', 'for w in words:', '    if w == w[::1]:', '        count += 1', 'print(count)'];
+      bugLine = 4;
+      fix = 'if w == w[::-1]:';
+      wrong = ['if w == w[::1]:', 'if w[0] == w[-1]:', 'if w == w[-1]:'];
+      output = String(palins.length);
+      hint = { nl: 'De code moet palindromen tellen: woorden die achterstevoren hetzelfde zijn.', en: 'The code should count palindromes: words that read the same backwards.' };
+    } else {
+      const name = rng.pick(LIST_NAMES);
+      let nums: number[];
+      const sumAt = (xs: number[], start: number) => xs.filter((_, i) => i >= start && (i - start) % 2 === 0).reduce((a, b) => a + b, 0);
+      do nums = rng.sample(Array.from({ length: 20 }, (_, i) => i + 1), 6);
+      while (sumAt(nums, 0) === sumAt(nums, 1));
+      codeLines = [`${name} = ${pyRepr(nums)}`, 'total = 0', `for i in range(1, len(${name}), 2):`, `    total += ${name}[i]`, 'print(total)'];
+      bugLine = 3;
+      fix = `for i in range(0, len(${name}), 2):`;
+      wrong = [`for i in range(1, len(${name}), 2):`, `for i in range(len(${name})):`, `for i in range(2, len(${name}), 2):`];
+      output = String(sumAt(nums, 0));
+      hint = { nl: 'De code moet de getallen op index 0, 2, 4 optellen. Waar begint de lus nu?', en: 'The code should add the numbers at index 0, 2, 4. Where does the loop start now?' };
+    }
+    const code = lines(...codeLines);
+    const fixed = [...codeLines];
+    fixed[bugLine - 1] = (codeLines[bugLine - 1].match(/^\s*/)?.[0] ?? '') + fix;
+    return {
+      code,
+      prompt: promptFix(output, bugLine),
+      highlightLine: bugLine,
+      choices: makeChoices(rng, fix, wrong),
+      answer: fix,
+      hints: [
+        { nl: 'De code draait zonder foutmelding, maar geeft het verkeerde antwoord.', en: 'The code runs without errors, but gives the wrong answer.' },
+        hint,
+        { nl: 'Probeer elke optie op de eerste twee elementen.', en: 'Try each option on the first two elements.' },
+      ],
+      verify: { code: lines(...fixed), output },
+    };
+  },
+};
+
 export const hardTemplates: Template[] = [
+  sets, sortedKey, enumerateBuild, fixLoops,
   nestedLoops, dictCount, comprehension, recursion, stringChain, aliasing, collatz, fixLogic, fillComprehension, enumerateZip,
 ];

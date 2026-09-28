@@ -6,6 +6,10 @@ export type Loc = { nl: string; en: string };
 export const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard'];
 export const QUESTION_TYPES: QuestionType[] = ['predict', 'fillblank', 'fixbug'];
 
+/** Which kind of questions a run uses: hand-written templates, composed programs, or both. */
+export type QuestionMode = 'classic' | 'mix' | 'composed';
+export const QUESTION_MODES: QuestionMode[] = ['classic', 'mix', 'composed'];
+
 export interface Question {
   id: string;
   template: string;
@@ -55,6 +59,7 @@ export interface Settings {
   showNotes: boolean;
   idleResetSec: number;
   enabledTypes: Record<Difficulty, QuestionType[]>;
+  questionMode: Record<Difficulty, QuestionMode>;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -72,6 +77,7 @@ export const DEFAULT_SETTINGS: Settings = {
     medium: [...QUESTION_TYPES],
     hard: [...QUESTION_TYPES],
   },
+  questionMode: { easy: 'mix', medium: 'mix', hard: 'mix' },
 };
 
 export interface LeaderboardEntry {
