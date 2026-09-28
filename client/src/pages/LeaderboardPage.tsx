@@ -5,6 +5,7 @@ import { DIFFICULTIES, type Difficulty } from '@cc/shared';
 import { Logo } from '../components/Logo';
 import { useT } from '../i18n';
 import { api, type Boards } from '../lib/api';
+import { APP_URL, BASE_PATH } from '../lib/config';
 import { formatTime } from '../lib/format';
 import { useServerEvents } from '../lib/socket';
 import { useSettings } from '../store/settings';
@@ -12,9 +13,9 @@ import styles from './LeaderboardPage.module.css';
 
 const HIGHLIGHT_MS = 12_000;
 
-/** The URL players should open: this server's LAN address when viewed on localhost. */
+/** The URL players should open; on localhost, swap in this machine's LAN address. */
 function usePlayUrl() {
-  const [url, setUrl] = useState(location.origin);
+  const [url, setUrl] = useState(APP_URL);
   useEffect(() => {
     if (!['localhost', '127.0.0.1'].includes(location.hostname)) return;
     api
@@ -23,7 +24,7 @@ function usePlayUrl() {
         if (!urls[0]) return;
         const lan = new URL(urls[0]);
         lan.port = location.port;
-        setUrl(lan.origin);
+        setUrl(lan.origin + BASE_PATH);
       })
       .catch(() => {});
   }, []);
@@ -147,7 +148,7 @@ export function LeaderboardPage() {
             <h2>{t.playAt}</h2>
             <div className={styles.qr}>{qr && <img src={qr} alt={playUrl} />}</div>
             <p>{t.scan}</p>
-            <b className="mono">{playUrl.replace(/^https?:\/\//, '')}</b>
+            <b className="mono">{playUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}</b>
           </aside>
         )}
       </main>

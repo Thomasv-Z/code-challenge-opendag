@@ -22,6 +22,20 @@ const settings = createSettingsStore(db);
 const game = createGame(db, settings);
 
 const app = express();
+
+// When the frontend is hosted elsewhere (GitHub Pages), allow that origin to call the API.
+const CORS_ORIGINS = (process.env.CORS_ORIGIN ?? '').split(',').map((o) => o.trim().replace(/\/+$/, '')).filter(Boolean);
+app.use((req, res, next) => {
+  const origin = req.header('origin');
+  if (origin && CORS_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-pin');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    if (req.method === 'OPTIONS') return res.sendStatus(204);
+  }
+  next();
+});
 app.use(express.json({ limit: '32kb' }));
 
 const server = createServer(app);

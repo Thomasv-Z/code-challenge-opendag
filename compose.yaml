@@ -1,0 +1,18 @@
+services:
+  app:
+    build: .
+    image: code-challenge-opendag
+    restart: unless-stopped
+    ports:
+      - "${HOST_PORT:-3000}:3000"
+    environment:
+      ADMIN_PIN: ${ADMIN_PIN:?Set ADMIN_PIN in .env (see .env.example)}
+      # Only needed when the frontend is also hosted elsewhere, e.g. GitHub Pages.
+      CORS_ORIGIN: ${CORS_ORIGIN:-}
+      # Address shown on the leaderboard QR code, e.g. https://challenge.example.com
+      PUBLIC_URL: ${PUBLIC_URL:-}
+    volumes:
+      - data:/data
+
+volumes:
+  data:

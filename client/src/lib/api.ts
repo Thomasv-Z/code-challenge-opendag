@@ -1,3 +1,4 @@
+import { API_URL } from './config';
 import type { Difficulty, LeaderboardEntry, Loc, PublicQuestion, RunResult, Settings } from '@cc/shared';
 
 export class ApiError extends Error {
@@ -9,7 +10,7 @@ export class ApiError extends Error {
 async function request<T>(method: string, url: string, body?: unknown, pin?: string): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(url, {
+    res = await fetch(API_URL + url, {
       method,
       headers: {
         ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
