@@ -100,7 +100,7 @@ client/   React + Vite: game, hint bot, leaderboard display, settings
 
 - The server creates a random seed per run and generates the questions from it. The client only ever receives questions **without answers**. Each answer is checked on the server.
 - Times are measured with **server timestamps** plus penalties, so the client timer is display-only.
-- The leaderboard keeps the best time per name.
+- Names don't have to be unique: every finished run gets its own leaderboard entry.
 
 ### Adding a question template
 
